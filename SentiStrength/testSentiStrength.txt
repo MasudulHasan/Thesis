@@ -1,0 +1,10 @@
+Comment
+Is this already done in the LCD code? Maybe not...					
+"There are two RPC calls to be made to download artifacts |download| and |wait_for_status|. Sync means that you can use that artifact after |download| has returned. Async means that you must wait until |wait_for_status| has returned. This is done so that we can start kicking off a suite run before we fully finish downloading everything we might need.
+
+The |download| call happens as part of the RPC call that's made to autotest to kick off a suite. The |wait_for_status| RPC call is made as part of dynamic_suite code (see dynamic_suite.py:450). By the time you'd be kicking off your firmware test it would be assured that the firmware tarball would be downloaded. Therefore, I would think it should be fine/safe to make this async."					
+"Patch Set 2:
+
+I would suggest two commits. The first one is just the import without and mods. The second is a git mv of the ebuild file to the -r1 name and enabling the patch. This is done so that we retain history of pristine upstream ebuild and then successive changes to them locally.  So in this commit just pull in the upstream ebuild  as is, and a follow on with the modification. 
+
+Thanks"					

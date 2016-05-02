@@ -1,0 +1,493 @@
+Comment
+Is this already done in the LCD code? Maybe not...
+"There are two RPC calls to be made to download artifacts |download| and |wait_for_status|. Sync means that you can use that artifact after |download| has returned. Async means that you must wait until |wait_for_status| has returned. This is done so that we can start kicking off a suite run before we fully finish downloading everything we might need.
+
+The |download| call happens as part of the RPC call that's made to autotest to kick off a suite. The |wait_for_status| RPC call is made as part of dynamic_suite code (see dynamic_suite.py:450). By the time you'd be kicking off your firmware test it would be assured that the firmware tarball would be downloaded. Therefore, I would think it should be fine/safe to make this async."
+"Patch Set 2:
+
+I would suggest two commits. The first one is just the import without and mods. The second is a git mv of the ebuild file to the -r1 name and enabling the patch. This is done so that we retain history of pristine upstream ebuild and then successive changes to them locally. So in this commit just pull in the upstream ebuild as is, and a follow on with the modification.
+
+Thanks"
+"Patch Set 1: Looks good to me, but someone else must approve
+
+Looks fine though agree with Chris's comment that exported strings should be defined in a header file that can be shared."
+"Patch Set 1: Looks good to me, but someone else must approve
+
+(2 inline comments)
+
+LGTM with a couple of small optional suggestions. I agree that using more realistic sites to consume memory would be nice, but I think getting something up and running soon would be valuable as well."
+"The variable you should probably use here is U_BOOT_FDT_USE, defined in make.conf.
+
+I agree the name is not great - we can change it if you like. But the intention is that this variable tells you which fdt to use, so there should be no need for this sort of logic in ebuilds."
+"Patch Set 1: Looks good to me, approved
+
+LGTM; and yes please do upstream."
+"Patch Set 1:
+
+These are used in decoding also, so yes they should obviously be enabled when possible. Alternatively, someone should rewrite all this in intrinsics and verify it's not slower.
+
+x86inc.asm works when:
+(A) we're 64bit
+(B) we're 32bit, but pic is disabled
+(C) we're 32bit, pic is enabled, but the final binary is linked with -mdynamic-no-pic (or a non-gcc equivalent).
+
+x86inc.asm doesn't work when:
+(D) we're 32bit, pic is enabled, and the final binary does not use -mdynamic-no-pic or a non-gcc equivalent during linking
+
+My understanding is that Chrome on win32 does (C) (i.e. the windows/msvc linker does gcc's -mdynamic-no-pic behaviour by default), so there's definitely an argument to be made for keeping these assembly optimizations."
+"machine_emergency_restart is a good place for the cache flush in the sense that it is already machine-specific.
+
+But yes it's fine to take this approach. LGTM"
+"Patch Set 5:
+
+> David - it used to be that you needed to land both the
+> stable and the 9999 cros workon ebuild at the same time.
+> Has that been fixed and you can just land the 9999?
+
+That's right, you only need to land the 9999 now. (Actually it's been supported since at least Oct 2010, but yeah there used to be a bug)"
+Hmm I see what you mean. Yeah it might be possible to do what you describe.
+"Patch Set 1: Looks good to me, but someone else must approve
+
+Would wonder about chattr during runtime, but yeah you're likely right (assuming this has been image tested too)."
+"Patch Set 2: (2 inline comments)
+
+the split string constants make me sad, but i'm not sure upstream u-boot has signed onto that sanity yet like the linux kernel."
+"Patch Set 3: I would prefer that you didn't submit this
+
+(2 inline comments)
+
+I don't see the need for this change. If you built with the ebuild unmodified, you'd get an image.bin which would be what you want. As far as I could tell looking at the new function, it's identical to the old one except that you're leaving out the original image.bin.
+
+The difference between image.bin and image.rw.bin is that cros_bundle_firmware is being passed the --force-rw option in one case and not in the other. What that does is it changes the way parts of the image are put together so that vboot doesn't allow the RO only optimization even if the RO firmware claims it supports it.
+
+The RO only optimization is where you run the whole firmware out of RO instead of jumping into an RW copy partway through. If you really don't want to enable that optimization, you can not pass that flag to vboot when running VbInit.
+
+Even if you do want to split things out like this, it would be better to take the existing depthcharge function and to selectively build the RO image based on a use flag.
+
+
+Independent of whether splitting things up is a good idea, if Mike (who knows bash much better than I do, I think) likes the style of the new function you've made, it would be nice to incorporate the style changes back into the original function."
+"Patch Set 2: Looks good to me, approved
+
+I concur with jrbarnette@. It sounds like we can do a separate issue/CL for removing the pragma. To that end, I think a TODO() referring to that issue could be useful if added to this CL."
+NIT: a docstring of this Exception would be useful. Including the error above this.
+"1. This seems like a hack to work around a bug -- why are we reading from the pty after it is closed?
+2. This hack also looks too broad -- if any error occurs we close the pipe and stop reading, while squelching the error. This seems bad.
+
+Same comments below."
+a bit weird that you have this error change in Populate but not in the constructor
+"Ah. Yes, the test_wait_for_sleep() method implicitly assumes
+that sleep has already been triggered, but that won't be true if
+the trigger happens asynchronously. :-(
+
+At any rate, looking at test_wait_for_sleep() and
+test_wait_for_shutdown(), it seems like their only purpose in
+life is to hard code the timeout, and raise TestFail, neither of
+which you want.
+
+So... the right answer would seem to be to rename
+_ping_wait_down() to drop the leading '_', and just call it a
+public function.
+
+Also, the hard-coded timeouts here need names, and some
+justification for their length."
+"Is it always true for all CrOS devices that if eth1 exists it is an LTE system, and that we should use eth1 for communication in this test? I am guessing this would print out 'LTE system' on a CrOS device with on board Ethernet."
+Wow! Is this really true for any of the targets?
+"Patch Set 4: Verified
+
+PTAL now. See referenced bug for scope traces."
+"Patch Set 1: I would prefer that you didn't submit this
+
+(1 inline comment)
+
+LGTM after a small bug fix."
+"Make sure to remove the bug description as well, it might confuse things when parsed."
+"nit: use die, not echo, same for all errors below"
+The best way to keep someone from doing this is to raise NotImplemented errors instead of pass
+"Patch Set 2:
+
+This patch fixed the style errors and separated the DDR3 config change to anther commit.
+
+Some issues Simon pointed out still need Samsung people to fix."
+what does this mean? there's a scan result we currently fail to parse?
+"Patch Set 4: Fails
+
+Unit tests fail for chromeos-ec so no changes can be committed until this is fixed :("
+"EAPI is not required to be numeric, so this will fail when it is a string"
+"Patch Set 3: No score
+
+Removing fails since I tracked down the failure to the previous CL."
+"Is snd_pcm_close() the same as snd_output_close()?
+I expect to see ""snd_output_close()"" called before this return. My preference would be to see use of ""goto error_out"" or something similar in all the ""if"" failure cases."
+"OK here are my thoughts:
+
+The error handling is fine, but the message doesn't mention bootstage so it isn't clear where the failure is. I think you should fix that.
+
+set_bootstage_prop is called twice with the same path. In both cases it calls fdt_path_offset() to get the offset. You may as well just call it once here, immediately after your strncat below.
+
+Then you set_bootstage_prop can be passed a node. In fact this function just has a call to fdt_setprop() so why have it at all? Just call fdt_setprop_cell or fdt_setprop_string instead, which are better suited to your requirements anyway
+
+Re working_fdt, I do prefer a single reference to a global rather than multiple spread throughout the file, but if you remove the function then this is not an issue anyway, I think that the whole of this for() loop should be in a separate function called from bootstage_report() if working_fdt is not 0. It should be passed working_fdt as a parameter,"
+"Patch Set 5: Fails
+
+This already failed the unit tests once. Please do not submit any CLs until the unit tests are fixed."
+"Patch Set 1: Fails
+
+here is the error which failed your powertop bump:
+
+powertop-2.2-r2: ./csstoh "".""/powertop.css css.h
+powertop-2.2-r2: /bin/sh: ./csstoh: cannot execute binary file
+powertop-2.2-r2: make[2]: *** [css.h] Error 126"
+"Patch Set 1: Fails
+
+this CL is breaking the CQ. please try running it against a 32bit x86 board (like x86-alex or x86-generic) before re-submitting.
+
+make -j32 BUILD=/build/butterfly/tmp/portage/chromeos-base/vboot_reference-1.0-r811/work/vboot_reference-1.0/build-main ARCH=x86 MINIMAL=minimal runtests
+Using qemu for testing.
+Copying qemu binary.
+cp: cannot stat '/usr/bin/qemu-x86': No such file or directory
+make: *** [qemu_install] Error 1
+* ERROR: chromeos-base/vboot_reference-1.0-r811 failed (test phase):"
+What happens if this fails? How do we ensure ssh is killed? Maybe a trap would be more supportable?
+I think this should remain in cleanup() or else it will not be called if the above fails.
+"Patch Set 1: Fails
+
+(1 inline comment)
+
+I just tried this change on tot gavd on my waluigi and it didn't detect headphone insertion. I went back to just tot, the change renaming udev_listen -> udev_sound, and it does work.
+
+I know the commands for alsa were not flushed out yet in the max98095 codec, is that the problem right now?"
+"conf custom can be changed on a live VM?
+If not, IMHO tunnelled calculus should be done when we are creating the object and not here.
+May be all the virDomainMigrateFlags too."
+"IMHO this two functions are unnecessary.
+There are only validates (oh my...)
+Better if will be done in the level using the parameters."
+"Hi,
+Correct me if i'm wrong - but, we have 2 instances of commands in the flow you described. This means they do not share state. The change done by Arik adds messages on the canDoActionMessages() collection of each one of the commands. Not sure how you're going to have this mix."
+"Patch Set 2:
+
+Greg,
+
+Thanks for the info. I agree with your assessment on caching as well."
+"I agree that a trailing ""or"" is missing here (though defining a function is_configured and putting the grep's in it would have been better than any commenting. I cannot say that I like duplicating bash logic in English)"
+I agree with the above comment ... the above logic change should be in a separate patch than the channel handling
+"I feel like two question are in order, one question to select the firewall manager and not present it if only one is detected or auto selected, this can be saved in answer file.
+
+And the other if you want to apply the setting now.
+
+Or... maybe the other way around... first ask if you want to apply firewall setting, then if selected yes to ask about manager etc..."
+"No it doesn't ""explode"", I am not changing a sebool, I am changing the file context. Yes a restorecon would un-do the change. We'll need to file a request for that but for now this is good enough."
+Maybe you could add a real description - yes it's just something really minor :)
+"Patch Set 12: Code-Review+2
+
+currently our enums reflect the super-set of the devices which are supported. yeah - we are not allow flexibility at this stage."
+"Patch Set 1:
+
+I would like Shireesh to approve this as well."
+"indeed!
+Sorry, I assumed that this function was tested and it seems trivial to me since in Oracle/Sybase this works like a charm
+would you mind sending a patch fixing the fn_db_delete_config_values as well and put me as a reviewer ?
+thanks"
+"I don't get it - you do not have the same keys here and in the rpm-based part. We'd like this to be a portability layer, so that Engine should not care if it's RPM or DEB.
+
+Maybe the mapping is impossible - but it does not seem that there's an attempt here."
+"maybe:
+The specific reason the vm cannot run. ?
+or:
+The specific error that is preventing the vm from running. ?"
+"Please introduce new value in VdcBllErrors for VDSM error related to this command, and also add handling for it in AbstractGlusterBrokerCommand"
+"Patch Set 2: Fails
+
+Configuring Firewall... [ DONE ]
+
+Starting ovirt-engine Service... [ ERROR ]
+Error: Can't start the ovirt-engine service
+Please check log file /var/log/ovirt-engine/engine-setup_2013_04_04_14_15_27.log for more information
+output = None
+stderr = None
+retcode = 1
+Executing command --> 'ls /var/log/ovirt-engine -trll | grep setup | tail -n1 | grep -o ""[^ ]*[.]log$""'
+output = engine-setup_2013_04_04_14_15_27.log"
+The if condition will be true when isDetailsRequired() == true and volumeName is empty. Will it work? Do you need to add a validation against this scenario?
+"you can assign:
+fileExists = os.path.exists(enabledFile) and os.path.exists(disabledFile)
+and then use fileExists as boolean, False means one not exists, True means both exists."
+"Patch Set 2:
+
+Liron, so lets think:
+Reconstruct flow:
+Go throught all vds refresh and on case of some exception connect.
+Recovery flow:
+Go through all vds connect and after that refresh, no need for exception handling on case of exception at refresh.
+especially additional refresh.
+No need for additional method that u introduced.
+Where it is 99% percent common. You already introduced a method that at some flow should return only true and complicated a very simple code. ""right now there is no need to copy the method in my opinion - 99%"" - your change at connectAndRefreshAllUpHosts in order to solve bug at reconstruct flow caused to regression in recovery flow. I don't think that these means 99% common."
+"Patch Set 1:
+
+Alon,
+
+Regardless of discussion we have in the bug #996021
+calling .disconnect() when sdk instance is no longer
+needed is a good change, i think it can confidently
+go in."
+"Patch Set 2: I would prefer that you didn't submit this
+
+This bug is a duplicate 841534 of and will be handled in http://gerrit.ovirt.org/#/c/6593.
+
+After discussing, the correct behavior is to allow diskless templates, so this patch is no longer relevant.
+Please abandon it.
+
+
+Sorry for the hassle."
+"I understand that right not only root is supported by engine, but I prefer that the API layer will pass to the engine all the information that the user provided. Engine may choose to ignore, for now, all users aside for 'root'.
+
+The way it's written here, is just a bug waiting to happen - tomorrow engine will support other users, and suddenly we will have a bug in the API: some users are not passed on to the engine, for some reason."
+this enabled should be only after no errors at all...
+"Patch Set 4: I would prefer that you didn't submit this
+
+Please fix the indent pep8 errors in gluster_cli_tests.py at least."
+"Patch Set 20:
+
+Same compilation errors in SshSoftFencingCommand and VdsStaticDAODbFacadeImpl as I wrote about in PS19 comments"
+"Patch Set 1:
+
+michael, it is a flag to protect against accidental deletion.
+i.e., engine will fail a request to delete a VM/template which has this flag.
+user would need to disable this flag before they delete the VM.
+this would be similar to amazon 'termination protection'[1]
+in ovirt, terminate == delete
+
+[1] http://aws.typepad.com/aws/2011/02/new-console-features-forced-detach-termination-protection.html"
+"Patch Set 7: Fails
+
+well - we seem to have a race where we fail to connect to socket after migration, and guest information is not reported, adding logs on one host seem to 'resolve' the issue.
+also, why we call for unregister socket 3 times on migration scenario ?"
+this will clearly fail - you must to initialize jobProperties first....
+You handle the failure once
+"Patch Set 2:
+
+The Jenkins failure is an unrelated foobar."
+"This does not really explain what the issue was.
+
+When new SD creation failed, failure status was not checked and flow continued to try and attach the SD to a pool which obviously failed and returned a storage domain not found error instead of the creation failure.
+SD creation status is now checked before proceeding."
+"does getVds() return anything here? i can't see it is initialized so looks like NPE here. anyway the host which failed to connect should be returned from ConnectAllHostsToLun command, as the connection to all of the pool hosts is done inside it."
+"Because this script is called as well from
+[root@f19_1]~# cat /usr/lib/systemd/system/vdsm-restore-net-config.service
+[Unit]
+Description=Restore failed Vdsm network configuration on boot
+Requires=libvirtd.service
+Before=vdsmd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/share/vdsm/vdsm-restore-net-config
+
+[Install]
+WantedBy=multi-user.target
+
+And it is useful to have the logging go the the supervdsm one."
+"Patch Set 13: Fails
+
+well, looks much better, you fixed the alerts, but in iscsi, block master domain, i get attribute error on missing (dom):
+
+MainThread::WARNING::2011-12-08 18:32:40,319::hsm::2578::Storage.HSM::(prepareForShutdown) Failed to stop RepoStats thread
+Traceback (most recent call last):
+File ""/usr/share/vdsm/storage/hsm.py"", line 2576, in prepareForShutdown
+self.pools[spUUID].stopRepoStats(dom)
+AttributeError: 'setMaxHostID' object has no attribute 'stopRepoStats'"
+"Will we miss adding the server if the status change command failed on it? I guess we should add it if it fails with ""already enabled"" error. Not sure what we should do if there is some other error though. Maybe we should let the sync job handle such cases."
+"Patch Set 2: Verified
+
+verified behavior.
+There is a problem when selecting a key and value remains empty: Validation isn't being performed on the client side and it fails on validation on the engine-core instead (i.e. CanDoAction).
+Can be fixed later in a separate patch."
+"Patch Set 2: Fails
+
+Configuring Firewall... [ DONE ]
+
+Starting ovirt-engine Service... [ ERROR ]
+Error: Can't start the ovirt-engine service
+Please check log file /var/log/ovirt-engine/engine-setup_2013_04_04_14_15_27.log for more information
+output = None
+stderr = None
+retcode = 1
+Executing command --> 'ls /var/log/ovirt-engine -trll | grep setup | tail -n1 | grep -o ""[^ ]*[.]log$""'
+output = engine-setup_2013_04_04_14_15_27.log"
+"Patch Set 2: Looks good to me, but someone else must approve
+
+(3 inline comments)
+
+reading the code it looks okay to me. just minor things (can be done upon commit imho)"
+"This is already done by getValue(). I think checkbox & radio are the only ViewHelpers that need direct access to the ""property value"" so I would move that ""getLastSubmittedFormData()"" up to the ViewHelper in those cases to minimize side effects."
+"Patch Set 6: I would prefer that you didn't submit this
+
+I like it, but it fails:
+
+* A fatal is triggered if the _extensions table is empty (test: just truncate the table)
+* After update a refresh / reload should be done (or something), so the date is then current, or this should be handled by JS answer?"
+"Patch Set 6:
+
+@Kay: Well, that's exactly what I am saying. It has been like this ever before and has not much to do with the card layout (but I agree that it is a bit more prominent now).
+
+If you edit a record in the upper right corner there is a button which opens this record in a new window. If you do this and go back to the original window and continue editing the same record you have exactly the same problem, it was there for ""ages"".
+
+But OK it is a nice feature and I will not discuss the commit message any more, no one will care until it is merged anyway."
+"Patch Set 1: I would prefer that you didn't submit this
+
+Hi ananth,
+I agree with Markus that I'm in favor of not merging this.
+
+What xml parser ate you using that is not capable of empty, closing tags? Esp. if you set the HTML tendering mode to XHTML, the output is a subset of XML.
+
+If you need to have empty closing tags replaced by q dedicated closing tag for a special use case, you could ask on http://forum.typo3.org to figure out a solution for you. I'm confident that it's possible, however I would not change TYPO3's default behavior.
+Thanks for your understanding.
+
+Yours Steffen"
+"Patch Set 1: I would prefer that you didn't submit this
+
+I agree with the first reviewer, turning the condition around will make it better readable. Besides that, great idea and solution!"
+"Patch Set 6:
+
+Except for my spaces nitpicking, yes ;-)"
+"Patch Set 2:
+
+as this is pending for almost 10 months now, what should be the next steps? Do we want that, if yes we need a ticket in forge, Release info in commit message and probably the unit test changes. I can at least create the ticket and change the commit message, if anyone cares to comment on it here. Stephan woudl you provide the changed tests?
+Otherwise we probably should drop the change."
+"I would say this has never worked - as we do not support string comparisons in fluid so far. Thus, {std.value} == yes always equals to TRUE."
+"Patch Set 4: Code-Review+2
+
+Now it looks good, yeah it worked in the first patch set but the rebase missed the comma"
+"Patch Set 3: Code-Review-1
+
+@Sebastian: Yeah we already discussed that, but since we don't have time to implement promises or similar for 1.0 it's still better than before. So for now we make sure to fetch the stuff early, but I agree we should add a TODO in there"
+mh yeah will be removed with next push...
+"Patch Set 1: I would prefer that you didn't submit this
+
+Seems like you commited some too much ;)"
+"Patch Set 5: Looks good to me, but someone else must approve
+
+Rebased with current master
+
+Took comments into account. Using 4.3 in deprecation log as it is like that in config_default but using @deprecated with 4.6 and remove in 4.8 to stick to our rules."
+"Patch Set 4:
+
+Although already merged, I don't think this is the right solution.
+
+Currently the behavior of the permissions system (TCEmain and thus also all other components) is to use ""checkLanguageAccess"" only if the TCA for the table has a ""languageField"".
+
+""pages"" is not such a table, because there is ""pages_language_overlay"". So the current integrators solution to restrict a user not to be able to edit the ""Original Language"" is to remove the permissions for editing table ""pages"" and only allow ""pages_language_overlay"". See also http://forge.typo3.org/issues/27794
+
+This is not what is being done in the patch, but instead you simply check for checkLanguageAccess.
+
+Similar problem we have in the ""List view"", as the context menu provides more options (i.e. for content elements) than really permitted. Permission check in TCEmain is more ""aggressive"" than in the GUI.
+
+Correct solution for this particular fix would be to check if user has ""edit permissions"" on the ""pages"" table - just like TCEmain also does.
+
+As this is confusing for integrators in general, I would rather propose that someone thinks about a better approach on ""language restriction permissions on pages"" in the first place before fixing the GUI.
+
+I am undecided still if we should revert this merge, but I am currently pretty sure we should not backport that to 4.5.
+
+Maybe in your research you find out different aspects than I did or you can prove me wrong as I have only touched the ""surface"" of the whole complex. Please let me know!"
+whitespace error (no trailing whitespace is allowed according to CGL)
+"please phrase commit messages as solution, not as error description (even if that'll be ""...not anymore"" or so...)"
+"Patch Set 1:
+
+Sorry, the news be module is completely broken for me ... sql error, then namespace errors ...
+
+but the news be module with 4-7 suffers from the exact error my patch has fixed which would be reintroduced with this ""fix"".
+
+On top of that, there is no point to check for the object we just created, thus we either remove the check, then we are back to the state before my patch which creates a warning.
+
+Please tell me the exact error that happens, otherwise I can not reproduce the regression."
+"This seems a bit error prone and hacky to me. What if $contentContext->getInaccessibleContentShown() was TRUE before. It would be FALSE afterwards (probably not relevant here, but maybe elsewhere).
+What about a second argument in ""getNode()"" that allows to even fetch hidden/protected nodes?"
+maybe add TRUE as the third argument for using strict comparisons?
+"I read it as alternatives to TRUE are ... so all upper case would still be the default. But, actually, I would not mention the alternatives at all."
+"Patch Set 1: Abandoned
+
+TYPO3 4.6 branch is at the end of bug fixing period. Only priority changes will be considered (compatibility fixes and security fixes) until end of April 2013."
+"Patch Set 4:
+
+The indexer usage was not changed, it just fixes the bug and it works. :) Adapting to the new indexer is yet another task, of course."
+I know - but maybe it would make sense to correct it right away instead of creating a separate bug report which doubles or triples the effort to get it done...
+"Patch Set 3:
+
+I have a separate TYPO3 installation running in an alias on the main site - that is in /home/. So domain.com is one TYPO3 installation and /home/ is a separate one using alias in Apache.
+
+This works fine given that config.absRefPrefix is set to http://domain.com/home/
+
+The automatically created JS and CSS has the filename http://domain.com/typo3temp/.... in the compressor. So conceptually it is actually not an external CSS/JS, but because of the absRefPrefix - TYPO3 think it is external.
+
+Does the above make sense?
+
+This patch fixes the errors in the log where php tries to execute filemtime(""/home/domain.com/home/htdocs/http://domain.com/home/typo3temp..."")"
+"Patch Set 1: Looks good to me, but someone else must approve
+
+Just fix those three whitespace errors in the test class."
+"Patch Set 2: Verified by team member; Looks good to me, approved
+
+I could not reproduce the errors - however the changes look straight-forward."
+"Will fail with: ""uid , pid , crdate"".
+
+I think the following would be better:
+/(^\s*|,\s*)uid(\s*,|\s*$)/
+
+I added space checks on both sides because TS objects can be also created programmatically, so spaces are not necessarily trimmed."
+"Patch Set 6: Fails; Looks good to me, but someone else must approve
+
+Rebased on master. The changes introduced come from I076a02096fb62bb1b8a51d888287d68c6ca26965, which was merged after the ""security"" topic was rebased, reviewed and verified by Robert.
+
+That change also reactivated a number of tests, of which three still fail in this state of the codebase."
+"Patch Set 2: Fails
+
+unit tests fail for me, please hold on (investigating)"
+"Patch Set 4:
+
+The failure has to do with the locales available on my system. de_DE.UTF-8 is not available, but when I change it to en_US.UTF-8 the test is ok."
+"Patch Set 5: Verified by team member; Looks good to me, approved
+
+The last patch set adds an @outputBuffering to the test Bastian added to avoid failure when running PHPUnit in strict mode.
+
+Submitting with prior approval."
+"Patch Set 2: Looks good to me, but someone else must approve
+
+Looks good to me.
+
+I consider the possibility of a fatal failure in (core) development context no big problem, as a core developer should know how the caching works."
+"Patch Set 2:
+
+Build Failed
+
+http://ci.typo3.robertlemke.net/job/TYPO3-Neos-Review/2721/ : Build failed"
+"Would be nice to have some errors thrown here if property setting failed. I just tried to set templateRootPathPattern instead of templateRootPath, which failed silently because there is no pubic setter for the *pattern property."
+"Patch Set 1:
+
+Build Failed
+
+http://ci.typo3.robertlemke.net/job/TYPO3-Neos-Review/2722/ : Build failed"
+"Patch Set 1: Fails
+
+@Aske, really nice UI changes and the image GUI has improved a lot.
+
+One thins thou when trying to hide and element on a page which not has been published. An exception is thrown, maybe something that should be handled inside the PHP code instead."
+"Patch Set 1:
+
+Thanks for your reviews.
+
+To be honest, it would be nice, if you could be a bit more friendly to - not first time in case of Thomas, but occasional - contributors. IMHO one or two -1 are enough for the beginning.
+
+Bjrn and Philipp, you're really helpful contributors, thanks for that. We were discussing the ""patch for a patch rule"" over the last days, which we enjoined on ourselves as core team members some time ago (and it works in at least most of the cases I think).
+
+Please don't treat this as harsh words, I just want to make you aware of the fact that motivating every new contributor is very important for us, and hopefully also for you as an essential part of the TYPO3 community.
+
+Thanks for your support!
+Steffen
+
+P.S: The reason, why Jenkins fails is probably, because of the parent commit is very old and the patch has to be rebased. Will try to get this done now (if network connection allows)"
+"Patch Set 4:
+
+I uploaded a patch set 4 which uses a VariableFrontend for TCA caching.
+
+But now the test ""loadBaseTcaCreatesCacheFileWithContentOfAnExtensionsConfigurationTcaPhpFile"" fails."
