@@ -7,11 +7,13 @@ def main():
     temp_sentiment_score = None
     text_status = None
     count = 0
+    commentCount = 0
 
     for line in output_file:
         if(len(line.split()) < 3):                  #At least 3 entities - text, pos, neg
             continue
         text, pos, neg = line.split("\t")
+        commentCount += 1
         # print(text)
 
         if line[0] == '"':
@@ -39,10 +41,10 @@ def main():
 
         if(final_sentiment_score != None):          #Sentiment score ready
             # print(str(final_sentiment_score))
-            # count += 1
+            count += 1
             result_file.write(str(final_sentiment_score)+'\n')
 
-    # print(count)
+    print(commentCount)
 
 if __name__ == '__main__':
     main()
