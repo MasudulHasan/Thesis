@@ -2,7 +2,7 @@ import urllib
 import urllib.request
 from http.cookiejar import CookieJar
 
-from Tools.scripts.treesync import raw_input
+# from Tools.scripts.treesync import raw_input
 from bs4 import BeautifulSoup
 import re
 import datetime
@@ -25,7 +25,7 @@ def content(theurl):
 
     print "Opening the file..."
     """
-    target = open("foo.txt", 'a')
+    target = open("foo1.txt", 'a')
     try:
         line1 = soup.find('div', {"class": "user-comments"}).findAll('p')
         s = str(line1)
