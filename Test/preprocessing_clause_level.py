@@ -35,10 +35,10 @@ def main(count):
             continue
         # if (s != " "):
         try:
-            text = tokenizer.tokenize(s)
+            text = tokenizer.tokenize(s)        # break big comments into separate sentences
             num=0
             for t in text:
-                t = re.split('\s+', t)          #removing extra spaces between words
+                t = re.split('\s+', t)          # removing extra spaces between words
                 t = ' '.join(t)
                 num += 1
                 print(str(num))
