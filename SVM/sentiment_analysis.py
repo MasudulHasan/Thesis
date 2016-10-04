@@ -1,5 +1,3 @@
-__author__ = 'arathi'
-
 import csv
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -11,6 +9,7 @@ from sklearn import cross_validation
 from sklearn.metrics import classification_report
 import numpy as np
 from sklearn.metrics import accuracy_score
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
@@ -25,14 +24,21 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+=======
+from sklearn.ensemble import BaggingRegressor
+>>>>>>> b941d0b73314ee20489d1ed44f15c2a96028647e
 
-# review.csv contains two columns
+# comments.csv contains two columns
 # first column is the review content (quoted)
 # second column is the assigned sentiment (positive or negative)
 def load_file():
-    with open('comments.csv') as csv_file:
+    with open('~1k comments.csv') as csv_file:
         reader = csv.reader(csv_file,delimiter=",",quotechar='"')
+<<<<<<< HEAD
         reader.__next__()
+=======
+        next(reader)
+>>>>>>> b941d0b73314ee20489d1ed44f15c2a96028647e
         data =[]
         target = []
         for row in reader:
@@ -57,6 +63,14 @@ def learn_model(data,target):
     # X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
     #                            random_state=1, n_clusters_per_class=1)
     data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.4,random_state=43)
+<<<<<<< HEAD
+=======
+    # NBclassifier = BernoulliNB().fit(data_train,target_train)
+    #
+    # ensemble = BaggingRegressor(base_estimator=BernoulliNB(),
+    #                             max_samples=1.0,
+    #                             bootstrap=True).fit(data_train,target_train)
+>>>>>>> b941d0b73314ee20489d1ed44f15c2a96028647e
     # classifier = BernoulliNB().fit(data_train,target_train)
     classifier = SVC(gamma=.01, C=100.)
     # classifier = SVR(gamma=1, C=10.)

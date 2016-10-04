@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import re
 import datetime
 
-from numpy.distutils.fcompiler import none
+# from numpy.distutils.fcompiler import none
 
 
 def content(theurl,label):
@@ -15,7 +15,7 @@ def content(theurl,label):
     thepage = urllib.request.urlopen(theurl)
     soup = BeautifulSoup(thepage, "html.parser")
 
-    target = open("ODIMatchDetail.txt", 'a')
+    target = open("TESTT__ODIMatchDetail.txt", 'a')
     # print("HERE "+label+'\n')
     target.write("Label: "+label+'\n')
     try:

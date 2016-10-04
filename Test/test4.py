@@ -13,7 +13,7 @@ def content(theurl,label):
     thepage = urllib.request.urlopen(theurl)
     soup = BeautifulSoup(thepage, "html.parser")
 
-    target = open("ODIComment-With-Hader2.txt", 'a')
+    target = open("TEST_ODIComment-With-Hader2.txt", 'a')
     target1 = open("ODIUserName-With-Hader2.txt", 'a')
     target2 = open("ODIDate-With-Hader2.txt", 'a')
     target3 = open("ODIComments.txt", 'a')
@@ -25,7 +25,7 @@ def content(theurl,label):
     # print("Label: " + label + '\n')
     try:
         # line1 = soup.find_all('div', {"class": "teams"}).find('a')
-        div = soup.find_all('ul', class_="all")
+        div = soup.find_all('ul', "all")
         # print(div)
         #links = div.find_all('div', class_="user-comments")
         # print(links)
@@ -125,4 +125,8 @@ def main():
                     print("Here" + s)
     print("Total Count : ",TotalCount)
 
-main()
+
+def main2():
+    content("http://www.espncricinfo.com/ireland/content/story/742397.html", "Label: Sri Lanka in Ireland ODI Series")
+
+main2()
