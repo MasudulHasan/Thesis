@@ -1,5 +1,3 @@
-__author__ = 'arathi'
-
 import csv
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -11,14 +9,15 @@ from sklearn import cross_validation
 from sklearn.metrics import classification_report
 import numpy as np
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import BaggingRegressor
 
-# review.csv contains two columns
+# comments.csv contains two columns
 # first column is the review content (quoted)
 # second column is the assigned sentiment (positive or negative)
 def load_file():
-    with open('comments.csv') as csv_file:
+    with open('~1k comments.csv') as csv_file:
         reader = csv.reader(csv_file,delimiter=",",quotechar='"')
-        reader.next()
+        next(reader)
         data =[]
         target = []
         for row in reader:
@@ -41,7 +40,12 @@ def preprocess():
 def learn_model(data,target):
     # preparing data for split validation. 60% training, 40% test
     data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.4,random_state=43)
-    #classifier = BernoulliNB().fit(data_train,target_train)
+    # NBclassifier = BernoulliNB().fit(data_train,target_train)
+    #
+    # ensemble = BaggingRegressor(base_estimator=BernoulliNB(),
+    #                             max_samples=1.0,
+    #                             bootstrap=True).fit(data_train,target_train)
+    # classifier = BernoulliNB().fit(data_train,target_train)
     classifier = SVC(gamma=.01, C=100.)
     #classifier = SVR(gamma=1, C=10.)
     classifier.fit(data_train,target_train)
@@ -51,8 +55,8 @@ def learn_model(data,target):
 # read more about model evaluation metrics here
 # http://scikit-learn.org/stable/modules/model_evaluation.html
 def evaluate_model(target_true,target_predicted):
-    print classification_report(target_true,target_predicted)
-    print "The accuracy score is {:.2%}".format(accuracy_score(target_true,target_predicted))
+    print (classification_report(target_true,target_predicted))
+    print ("The accuracy score is {:.2%}".format(accuracy_score(target_true,target_predicted)))
 
 def main():
     data,target = load_file()

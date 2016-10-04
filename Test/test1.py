@@ -13,7 +13,7 @@ def content(theurl):
     thepage = urllib.request.urlopen(theurl)
     soup = BeautifulSoup(thepage, "html.parser")
 
-    target = open("MatchLink.txt", 'a')
+    target = open("TEST_MatchLink.txt", 'a')
     try:
         # line1 = soup.find_all('div', {"class": "teams"}).find('a')
         div = soup.find_all('div', class_="teams")
