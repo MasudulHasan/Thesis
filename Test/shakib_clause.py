@@ -138,7 +138,17 @@ def main():
     import openpyxl
     wb = openpyxl.load_workbook('shakib_comments.xlsx')
     sheet = wb.active
-    preprocessing_clause_level.main(sheet.max_row)          # once comments are ready, preprocess them at clause level by running another python script
+    clauses = preprocessing_clause_level.main(sheet.max_row)          # once comments are ready, preprocess them at clause level by running another python script
+
+    print(str(len(clauses)))
+
+    wb2 = openpyxl.load_workbook('shakib_comment_clauses.xlsx')
+    sheet2 = wb2.active
+    i=1
+    for clause in clauses:
+        sheet2["A" + str(i)] = clause
+        i+=1
+    wb2.save('shakib_comment_clauses.xlsx')
 
 main()
 
