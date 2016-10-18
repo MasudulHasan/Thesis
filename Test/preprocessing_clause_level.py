@@ -23,13 +23,15 @@ def main(count):
     sheet = wb.active
     global TotalCount
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+    clauses = []
     while(TotalCount <= count):
         TotalCount += 1
         # test_comment = ["@Akila93, Are you saying, SL should eliminate an established young player with so much experience, solid international track-record to prove his consistency & skills"]
         a_line = sheet["B"+str(TotalCount)].value
         # for a_line in a_file:
         # for a_line in test_comment:
-        s = a_line.rstrip()
+        if a_line is not None:
+            s = a_line.strip()
         # print("test: " + s)
         if(s==""):
             continue
@@ -37,6 +39,7 @@ def main(count):
         try:
             text = tokenizer.tokenize(s)        # break big comments into separate sentences
             num=0
+            clauses += [""]
             for t in text:
                 t = re.split('\s+', t)          # removing extra spaces between words
                 t = ' '.join(t)
@@ -50,7 +53,6 @@ def main(count):
                 cur_entity = ""                 # enitity/enitities mentioned in current clause so far
                 pronoun_in_clause = False       # third-person pronoun in current clause so far?
                 comma_found = False             # comma found in current clause so far?
-                clauses = []
                 clause_starts = 0               # index where current clause starts
                 cur_index = 0                   # index of t currently
                 for word,pos in tags:
@@ -204,11 +206,16 @@ def main(count):
                 # print(propernouns)
             line_number += 1
             # if(line_number > 100):          # dealing with 100 comments at the moment
+            #     print("clauses: " + str(len(clauses)))
+            #     for c in clauses:
+            #         print(c)
             #     return
             print(str(line_number))
         except Exception as e:
             print("Here " + str(e))
 # print("Total Count : ",TotalCount)
+
+    return clauses
 
 # main()
 

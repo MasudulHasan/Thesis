@@ -1,20 +1,27 @@
 import openpyxl
 
 def main():
-    TotalCount=0
+    TotalCount=1
     wb = openpyxl.load_workbook('~1k comments.xlsx')
     sheet = wb.active
 
     reqd_ids = []
-    while TotalCount < sheet.max_row:
+    # while TotalCount < sheet.max_row:
+    while TotalCount < 372:
         print(TotalCount)
-        TotalCount += 1
         comment = sheet["A" + str(TotalCount)].value
-        if(len(comment.split()) <= 2):
-            reqd_ids += [str(TotalCount)]
+        comment = comment.split()
+        comment = comment[1:]
+        comment = ' '.join(comment)
+        # print(comment)
+        sheet["A"+str(TotalCount)] = comment
+
+        TotalCount += 1
+        # if(len(comment.split()) <= 2):
+        #     reqd_ids += [str(TotalCount)]
             # print("GHAPLA: " + TotalCount)
 
-
-    print(' '.join(reqd_ids))
+    wb.save('~1k comments.xlsx')
+    # print(' '.join(reqd_ids))
 
 main()
