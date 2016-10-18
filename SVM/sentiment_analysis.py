@@ -30,9 +30,12 @@ from sklearn.ensemble import BaggingRegressor
 # first column is the review content (quoted)
 # second column is the assigned sentiment (positive or negative)
 def load_file():
-    with open('~1k comments.csv') as csv_file:
+    with open('~1k comments.csv',encoding='ISO-8859-1',) as csv_file:
         reader = csv.reader(csv_file,delimiter=",",quotechar='"')
-
+        # try:
+        #     reader = csv.reader(open(csv_file, encoding='ISO-8859-1'), delimiter=',', quotechar='"')
+        # except IOError:
+        #     pass
         reader.__next__()
         data =[]
         target = []
@@ -57,7 +60,7 @@ def learn_model(data,target):
     # preparing data for split validation. 60% training, 40% test
     # X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
     #                            random_state=1, n_clusters_per_class=1)
-    data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.4,random_state=43)
+    data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.1,random_state=43)
 
     # NBclassifier = BernoulliNB().fit(data_train,target_train)
     #
