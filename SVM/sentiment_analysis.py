@@ -10,16 +10,7 @@ from sklearn.metrics import classification_report
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -57,7 +48,7 @@ def learn_model(data,target):
     # preparing data for split validation. 60% training, 40% test
     # X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
     #                            random_state=1, n_clusters_per_class=1)
-    data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.4,random_state=43)
+    data_train,data_test,target_train,target_test = cross_validation.train_test_split(data,target,test_size=0.1,random_state=43)
 
     # NBclassifier = BernoulliNB().fit(data_train,target_train)
     #

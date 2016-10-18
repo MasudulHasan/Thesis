@@ -7,11 +7,14 @@ def main():
 
     reqd_ids = []
     # while TotalCount < sheet.max_row:
-    while TotalCount < 372:
+    while TotalCount <= sheet.max_row:
         print(TotalCount)
         comment = sheet["A" + str(TotalCount)].value
+        comment = comment.strip("',.\"")
         comment = comment.split()
-        comment = comment[1:]
+        if '@' in comment[0]:
+            print(comment[0])
+            comment = comment[1:]
         comment = ' '.join(comment)
         # print(comment)
         sheet["A"+str(TotalCount)] = comment
