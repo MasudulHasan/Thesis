@@ -3,6 +3,7 @@ import urllib.request
 import re
 import nltk.data
 from nltk.tag import pos_tag
+from bisect import bisect_left
 # TotalCount
 
 TotalCount=0
@@ -26,15 +27,16 @@ def main(count):
     clauses = []
     while(TotalCount <= count):
         TotalCount += 1
-        # test_comment = ["@Akila93, Are you saying, SL should eliminate an established young player with so much experience, solid international track-record to prove his consistency & skills"]
-        a_line = sheet["B"+str(TotalCount)].value
-        # for a_line in a_file:
-        # for a_line in test_comment:
-        if a_line is not None:
-            s = a_line.strip()
-        # print("test: " + s)
-        if(s==""):
-            continue
+        s = '''Fall of one and rise of another seem fit to describe Pandya brothers. Hardik was drafted into the side not long ago with all sorts of comarisons to good current day allrounders, documentaries aired about his fairy tale of finding the pinnacle and limelight, influential binny was sent home but Hardik has lost his aroma too fast. On the other hand his brother looks a much better prospect both with the bat and the ball. Bumrah continues to impress and I hope he will be given an opportunity to perform outside India and pitches will not made placid to support indian batsmen. I am sure Gambhir will make his way to indian side again to add experience on the back of this IPL season. He seems to be more motivated by the downfall of Dhawan
+'''
+        # a_line = sheet["B"+str(TotalCount)].value
+        # # for a_line in a_file:
+        # # for a_line in test_comment:
+        # if a_line is not None:
+        #     s = a_line.strip()
+        # # print("test: " + s)
+        # if(s==""):
+        #     continue
         # if (s != " "):
         try:
             text = tokenizer.tokenize(s)        # break big comments into separate sentences
@@ -50,12 +52,27 @@ def main(count):
                 tags = pos_tag(t.split())
                 print(tags)                     # part-of-speech tags by nltk
                 verb_in_clause = False          # verb present in current clause so far?
-                cur_entity = ""                 # enitity/enitities mentioned in current clause so far
+                cur_entity = ""                 # entity/entities mentioned in current clause so far
                 pronoun_in_clause = False       # third-person pronoun in current clause so far?
                 comma_found = False             # comma found in current clause so far?
                 clause_starts = 0               # index where current clause starts
                 cur_index = 0                   # index of t currently
+                tags_index=-1
+                verbs_at = []
+                commas_at = []
+                connecting_words_at = []
                 for word,pos in tags:
+                    tags_index += 1
+                    if pos == 'VB' or pos == 'VBD' or pos == 'VBG' or pos == 'VBN' or pos == 'VBP' or pos == 'VBZ':
+                        verbs_at += [tags_index]
+                    if word.endswith(','):
+                        commas_at += [tags_index]
+                    if pos == 'CC':
+                        connecting_words_at += [tags_index]
+
+                tags_index = -1
+                for word,pos in tags:
+                    tags_index += 1
                     if word[len(word)-1] == ',':
                         comma_found = True
                     word_original = word.strip(",'\".()!?").lower()
@@ -76,14 +93,31 @@ def main(count):
                         elif word_original not in cur_entity:
                             cur_entity += ", " + word_original
 
-                    if comma_found or verb_in_clause:
+                    # print("tags_index: " + str(tags_index))
+                    if tags_index == len(tags)-3:         #last clause in text, can't make a new clause later on with just a few words left
+
+                        clause = t[clause_starts:].strip(',')
+                        clauses += [clause]
+                        if(cur_entity != ""):
+                            print(cur_entity.upper() + ": " + clause)
+                        elif (pronoun_in_clause):
+                            print("pronoun: " + clause)
+                        else:
+                            print("indirect_context: " + clause)
+
+                    elif comma_found or verb_in_clause:
                         # print("cur_word: " + word)
-                        if word_original == 'that' and tags.index((word,pos))+1 != len(tags) and tags[tags.index((word,pos))+1][1] == 'NN':     # e.g. "that boy" -> can't end clause at 'that'
+                        if word_original == 'that' and tags_index+1 != len(tags) and tags[tags_index+1][1] == 'NN':     # e.g. "that boy" -> can't end clause at 'that'
                             cur_index += len(word)+1                # updating current index for next iteration
                             continue
                         if (comma_found and pos_tag(t[clause_starts:].split()[0].split())[0][1] == 'IN') or (comma_found and verb_in_clause):
                             #verb present or clause starts with preposition
                                 # print(word)
+                                if (((tags_index>0 and tags[tags_index-1][1][:2] == 'JJ') or (tags_index>1 and tags[tags_index-2][1][:2] == 'JJ') or (tags_index>2 and tags[tags_index-3][1][:2] == 'JJ'))
+                                   and (tags_index+1 < len(tags) and tags[tags_index+1][1] != 'VB' and tags[tags_index+1][1] != 'VBG' and tags[tags_index+1][1] != 'VBD' and tags[tags_index+1][1] != 'VBN' and tags[tags_index+1][1] != 'VBP' and tags[tags_index+1][1] != 'VBZ')):
+                                        cur_index += len(word)+1
+                                        comma_found = False
+                                        continue
                                 clause_ends = cur_index + len(word_original)
                                 clause = t[clause_starts:clause_ends].strip(',')
                                 if ((verb_in_clause is False and len(clause.split()) <= 5)
@@ -95,6 +129,7 @@ def main(count):
                                 # clause = clause.lstrip()
                                 clauses += [clause]
                                 # print("verb: " + verb)
+                                print("COMMA")
                                 if(cur_entity != ""):
                                     print(cur_entity.upper() + ": " + clause)
                                 elif (pronoun_in_clause):
@@ -106,14 +141,52 @@ def main(count):
                                 cur_entity = ""
                                 pronoun_in_clause = False
 
-                        elif verb_in_clause and ((pos == 'CC' and tags.index((word,pos))+1 != len(tags) and         # connecting words like 'and' & 'but' can define new clause
-                                                      (tags[tags.index((word,pos))+1][1] == 'PRP' or tags[tags.index((word,pos))+1][1] == 'VBD'     # if next word is a pronoun or verb
-                                                       or tags[tags.index((word,pos))+1][1] == 'VBP' or tags[tags.index((word,pos))+1][1] == 'VBZ'))
+                        elif verb_in_clause and ((pos == 'CC' and                            # connecting words like 'and' & 'but' can define new clause
+                                                      tags_index+1 < len(tags) and
+                                                      (tags[tags_index+1][1] == 'PRP' or tags[tags_index+1][1] == 'VBD'     # if next word is a pronoun or verb
+                                                       or tags[tags_index+1][1] == 'VBP' or tags[tags_index+1][1] == 'VBZ'
+                                                       or (tags_index!=0 and (tags[tags_index+1][1][:2] != tags[tags_index-1][1][:2]
+                                                                              or (tags[tags_index+1][1][:2] == 'NN' and tags[tags_index+1][1] != tags[tags_index-1][1])))))  # if
                                 or (pos == 'IN' or pos == 'TO' or pos == 'WDT' or pos == 'WP' or pos == 'WRB' or word_original == 'outside')):              # prepositions can define new clauses too
-                            if(word_original == 'like'):
+                            if(word_original == 'like' or word_original == 'in'):
                                 cur_index += len(word)+1
                                 continue
-                            clause_ends = cur_index
+
+                            next_connecting_word_at = bisect_left(connecting_words_at, tags_index)
+
+                            if (pos=='CC' and ((tags_index>0 and tags[tags_index-1][1][:2] == 'JJ') or (tags_index>1 and tags[tags_index-2][1][:2] == 'JJ') or (tags_index>2 and tags[tags_index-3][1][:2] == 'JJ'))
+                                   and (tags_index+1 < len(tags) and tags[tags_index+1][1] != 'VB' and tags[tags_index+1][1] != 'VBG' and tags[tags_index+1][1] != 'VBD' and tags[tags_index+1][1] != 'VBN' and tags[tags_index+1][1] != 'VBP' and tags[tags_index+1][1] != 'VBZ')):
+                                        cur_index += len(word)+1
+                                        continue
+
+                            # print(str(tags_index) + " -> " + word)
+                            # print("pos0: " + pos + ", pos1: " + tags[tags_index+1][1])
+                            next_comma_at = bisect_left(commas_at, tags_index)
+                            next_verb_at = bisect_left(verbs_at, tags_index)
+                            # print("test1: " + str(next_comma_at))
+                            if(next_comma_at < len(commas_at) and commas_at[next_comma_at] > tags_index
+                               and  commas_at[next_comma_at] - tags_index <= 5):
+                                # print(word)
+                                # print("next comma after: " + str(commas_at[next_comma_at] - tags_index))
+                                cur_index += len(word)+1
+                                continue
+                            # print("test2: " + str(next_verb_at))
+                            if(next_verb_at < len(verbs_at) and verbs_at[next_verb_at] > tags_index
+                               and  verbs_at[next_verb_at] - tags_index <= 2):
+                                # print(word)
+                                # print("next verb after: " + str(commas_at[next_comma_at] - tags_index))
+                                cur_index += len(word)+1
+                                continue
+
+
+                            if (pos == 'IN' or pos == 'TO' or pos == 'WDT' or pos == 'WP' or pos == 'WRB' or word_original == 'outside'):              # prepositions can define new clauses too
+                                if ((next_connecting_word_at < len(connecting_words_at) and connecting_words_at[next_connecting_word_at] > tags_index
+                                and  connecting_words_at[next_connecting_word_at] - tags_index <= 3)):
+                                    cur_index += len(word)+1
+                                    continue
+                                clause_ends = cur_index
+                            else:
+                                clause_ends = cur_index+len(word)
                             # print("ends at: " + t[clause_ends:])
                             clause = t[clause_starts:clause_ends].strip(',')
                             if len(clause.split()) <= 5:                        #too small to be meaningful
@@ -123,6 +196,7 @@ def main(count):
                             # clause = clause.lstrip()
                             clauses += [clause]
                             # print("verb: " + verb)
+                            # print("last word: " + word)
                             if(cur_entity != ""):
                                 print(cur_entity.upper() + ": " + clause)
                             elif (pronoun_in_clause):
@@ -136,15 +210,6 @@ def main(count):
 
                     comma_found = False
 
-                    if tags.index((word,pos)) == len(tags)-1:         #last clause in text
-                        clause = t[clause_starts:].strip(',')
-                        clauses += [clause]
-                        if(cur_entity != ""):
-                            print(cur_entity.upper() + ": " + clause)
-                        elif (pronoun_in_clause):
-                            print("pronoun: " + clause)
-                        else:
-                            print("indirect_context: " + clause)
                     cur_index += len(word)+1
                     # print("rest: " + t[cur_index:])
                 # propernouns = []
@@ -213,11 +278,15 @@ def main(count):
             print(str(line_number))
         except Exception as e:
             print("Here " + str(e))
+            import sys, os
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
 # print("Total Count : ",TotalCount)
 
     return clauses
 
-# main()
+main(1)
 
 def test():
     s = "@ncpasan, Jayasuriya came as a bowler and played lower down in the batting order, during the first few years of his career"
@@ -225,5 +294,7 @@ def test():
     propernouns = [word.strip(",'.()!?") for word,pos in tags if (pos == 'NNP' or pos == 'NN')]
     propernouns = ', '.join(propernouns)
     print(propernouns)
+
+
 
 # test()

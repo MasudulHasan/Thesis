@@ -59,7 +59,14 @@ def learn_model(data,target):
     classifier = SVC(gamma=.01, C=100.)
     # classifier = SVR(gamma=1, C=10.)
     classifier.fit(data_train,target_train)
+    from sklearn import metrics
+    # # print("classification report: \n")
+    # # print(metrics.classification_report(target_train, classifier.predict(data_test)))
+    # print("confusion matrix: \n");
+    # print(metrics.confusion_matrix(target_train, classifier.predict(data_train)))
+    # print(data_test)
     predicted = classifier.predict(data_test)
+    # print(predicted)
     evaluate_model(target_test,predicted)
 
     # Create and fit an AdaBoosted decision tree
